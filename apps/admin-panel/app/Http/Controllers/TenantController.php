@@ -13,6 +13,11 @@ class TenantController
         return view('tenants.index', compact('tenants'));
     }
 
+    public function create()
+    {
+        return view('tenants.create');
+    }
+    
     public function store(Request $request)
     {
         $request->validate([

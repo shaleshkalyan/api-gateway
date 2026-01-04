@@ -1,5 +1,5 @@
 <x-layout>
-    <h1>URLs</h1>
+    <h1>View All URLs</h1>
 
     <table class="table">
         <thead>

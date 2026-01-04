@@ -1,11 +1,11 @@
 <x-layout>
-    <h1>Create Short URL</h1>
+    <h1>Add New URL</h1>
 
     <form method="POST" action="{{ route('url.store') }}">
         @csrf
 
         <div class="form-group">
-            <label class="label">Original URL</label>
+            <label class="label">New URL</label>
             <input class="input" name="original_url" required>
         </div>
 
@@ -20,6 +20,6 @@
             </select>
         </div>
 
-        <button class="btn">Create</button>
+        <button class="btn">Add</button>
     </form>
 </x-layout>

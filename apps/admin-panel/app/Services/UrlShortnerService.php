@@ -14,7 +14,7 @@ class UrlShortnerService
                 'created_by' => $userId,
                 'tenant_id' => $tenantId,
             ]);
-
+            dd($response);
         $response->throw();
 
         return $response->json();

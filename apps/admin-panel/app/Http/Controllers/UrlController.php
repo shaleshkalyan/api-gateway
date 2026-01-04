@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\UrlShortnerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UrlController
 {
@@ -15,7 +16,7 @@ class UrlController
      */
     public function index()
     {
-        $urls = DB::table('urls')
+        $urls = DB::table('url_mapping')
             ->latest()
             ->paginate(20);
 
@@ -44,12 +45,15 @@ class UrlController
             'tenant_id'    => ['required', 'exists:tenants,id'],
         ]);
 
-        $service->create(
+        $response = $service->create(
             $validated['original_url'],
             Auth::id(),
             $validated['tenant_id']
         );
-
+        Log::info('URL Shortner response', [
+            'status' => $response['status'],
+            'body' => $response['body'],
+        ]);
         return redirect()
             ->route('url.index')
             ->with('success', 'Short URL created successfully');

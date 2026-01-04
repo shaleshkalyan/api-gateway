@@ -19,5 +19,6 @@ Route::middleware(['auth:sanctum','admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class,'index'])->name('dashboard');
     Route::resource('/url', UrlController::class)->only(['index','create','store']);
     Route::get('/tenants', [TenantController::class,'index'])->name('tenants.index');
+    Route::get('/tenants/create', [TenantController::class,'create'])->name('tenants.create');
     Route::post('/tenants', [TenantController::class,'store'])->name('tenants.store');
 });

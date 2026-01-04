@@ -5,9 +5,8 @@
         @auth
             <nav>
                 <a href="{{ route('dashboard') }}">Dashboard</a>
-                <a href="{{ route('tenants.index') }}">Tenants</a>
-                <a href="{{ route('url.index') }}">URLs</a>
-                <a href="{{ route('url.create') }}">Create URL</a>
+                <a href="{{ route('tenants.create') }}">Add Tenants</a>
+                <a href="{{ route('url.create') }}">Add URL</a>
 
                 <form method="POST" action="{{ route('logout') }}" style="display:inline;">
                     @csrf
