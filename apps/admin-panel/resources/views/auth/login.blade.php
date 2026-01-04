@@ -9,7 +9,6 @@
 
     <form method="POST" action="{{ route('login.store') }}">
         @csrf
-
         <div class="form-group">
             <label class="label">Email</label>
             <input class="input" type="email" name="email" required>

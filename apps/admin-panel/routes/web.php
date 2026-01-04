@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UrlController;
+use App\Http\Controllers\TenantController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,4 +35,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     // Route::resource('/urls', UrlController::class)
     //     ->only(['index', 'create', 'store']);
+
+     Route::get('/tenants', [TenantController::class, 'index'])
+        ->name('tenants.index');
+
+    Route::post('/tenants', [TenantController::class, 'store'])
+        ->name('tenants.store');
 });
