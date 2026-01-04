@@ -1,0 +1,78 @@
+######################################
+# OS / Editor
+######################################
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+######################################
+# Frontend
+######################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+######################################
+# Laravel / PHP (All Apps)
+######################################
+/apps/**/vendor/
+/apps/**/.env
+/apps/**/.env.*
+/apps/**/bootstrap/cache/
+/apps/**/storage/app/*
+/apps/**/storage/framework/*
+/apps/**/storage/logs/*
+!/apps/**/storage/framework/.gitignore
+
+######################################
+# Laravel Sail / Docker
+######################################
+.env
+.env.*
+docker-compose.override.yml
+
+######################################
+# Testing / Coverage
+######################################
+.phpunit.result.cache
+coverage/
+.clover.xml
+
+######################################
+# Logs / Cache
+######################################
+*.log
+.cache/
+tmp/
+
+######################################
+# Build Artifacts
+######################################
+public/hot
+public/storage
+
+######################################
+# Packages (Shared Code)
+######################################
+/packages/**/vendor/
+
+######################################
+# Secrets & Keys
+######################################
+*.key
+*.pem
+*.crt
+*.p12
+*.env
+.env.production
+.env.staging
+
+######################################
+# Composer
+######################################
+composer.phar
