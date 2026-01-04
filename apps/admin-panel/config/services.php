@@ -34,5 +34,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    'url_shortner' => [
+        'endpoint' => env('URL_SHORTNER_ENDPOINT'),
+        'token' => env('URL_SHORTNER_TOKEN'),
+    ],
 ];

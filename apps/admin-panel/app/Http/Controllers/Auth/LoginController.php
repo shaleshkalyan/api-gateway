@@ -19,12 +19,12 @@ class LoginController
             'password' => ['required'],
         ]);
 
-        if (! Auth::attempt($credentials)) {
+        if (!Auth::attempt($credentials)) {
             return back()->withErrors([
                 'email' => 'Invalid credentials',
             ]);
         }
-
+        
         $request->session()->regenerate();
 
         return redirect()->route('dashboard');
@@ -32,8 +32,6 @@ class LoginController
 
     public function destroy(Request $request)
     {
-        Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Auth;
-// use App\Services\UrlShortnerService;
+use App\Services\UrlShortnerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +19,7 @@ class UrlController
             ->latest()
             ->paginate(20);
 
-        return view('urls.index', compact('urls'));
+        return view('url.index', compact('urls'));
     }
 
     /**
@@ -30,28 +30,28 @@ class UrlController
     {
         $tenants = Tenant::orderBy('name')->get();
 
-        return view('urls.create', compact('tenants'));
+        return view('url.create', compact('tenants'));
     }
 
     /**
      * Store new short URL
      * (NEW: accept + forward tenant_id)
      */
-    // public function store(Request $request, UrlShortnerService $service)
-    // {
-    //     $validated = $request->validate([
-    //         'original_url' => ['required', 'url', 'max:2048'],
-    //         'tenant_id'    => ['required', 'exists:tenants,id'],
-    //     ]);
+    public function store(Request $request, UrlShortnerService $service)
+    {
+        $validated = $request->validate([
+            'original_url' => ['required', 'url', 'max:2048'],
+            'tenant_id'    => ['required', 'exists:tenants,id'],
+        ]);
 
-    //     $service->create(
-    //         $validated['original_url'],
-    //         Auth::id(),
-    //         $validated['tenant_id']
-    //     );
+        $service->create(
+            $validated['original_url'],
+            Auth::id(),
+            $validated['tenant_id']
+        );
 
-    //     return redirect()
-    //         ->route('urls.index')
-    //         ->with('success', 'Short URL created successfully');
-    // }
+        return redirect()
+            ->route('url.index')
+            ->with('success', 'Short URL created successfully');
+    }
 }

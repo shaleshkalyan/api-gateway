@@ -1,0 +1,8 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Core\\DataContracts\\": "packages/core/data-contracts/src/",
+            "Core\\ShortIdGenerator\\": "packages/core/short-id-generator/src/"
+        }
+    }
+}
