@@ -59,8 +59,8 @@
 
                 async load() {
                     const url = this.showDeleted ?
-                        '/admin/api/tenants?trashed=1' :
-                        '/admin/api/tenants';
+                        '/api/tenants?trashed=1' :
+                        '/api/tenants';
 
                     const res = await fetch(url);
                     this.tenants = await res.json();
@@ -91,8 +91,8 @@
                 async save() {
                     const method = this.form.id ? 'PUT' : 'POST';
                     const url = this.form.id ?
-                        `/admin/api/tenants/${this.form.id}` :
-                        '/admin/api/tenants';
+                        `/api/tenants/${this.form.id}` :
+                        '/api/tenants';
 
                     await fetch(url, {
                         method,
@@ -110,7 +110,7 @@
                 },
 
                 async remove(id) {
-                    await fetch(`/admin/api/tenants/${id}`, {
+                    await fetch(`/api/tenants/${id}`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': document

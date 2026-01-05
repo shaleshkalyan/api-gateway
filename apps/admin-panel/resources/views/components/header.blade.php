@@ -14,8 +14,8 @@
                     Tenants
                 </a>
 
-                <a href="{{ url('url') }}"
-                   class="{{ request()->is('url*') ? 'active' : '' }}">
+                <a href="{{ url('urls') }}"
+                   class="{{ request()->is('urls*') ? 'active' : '' }}">
                     URLs
                 </a>
 

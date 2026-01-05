@@ -66,11 +66,11 @@
 
                 async load() {
                     const urlEndpoint = this.showDeleted ?
-                        '/admin/api/urls?trashed=1' :
-                        '/admin/api/urls';
+                        '/api/urls?trashed=1' :
+                        '/api/urls';
 
                     this.urls = await fetch(urlEndpoint).then(r => r.json());
-                    this.tenants = await fetch('/admin/api/tenants').then(r => r.json());
+                    this.tenants = await fetch('/api/tenants').then(r => r.json());
                 },
 
                 openCreate() {
@@ -86,7 +86,7 @@
                 },
 
                 async save() {
-                    await fetch('/admin/api/urls', {
+                    await fetch('/api/urls', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -102,7 +102,7 @@
                 },
 
                 async remove(id) {
-                    await fetch(`/admin/api/urls/${id}`, {
+                    await fetch(`/api/urls/${id}`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': document

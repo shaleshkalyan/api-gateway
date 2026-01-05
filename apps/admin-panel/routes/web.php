@@ -17,7 +17,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Admin Panel (Protected)
+| Protected Area
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -26,15 +26,20 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Pages (Blade views ONLY)
+    |--------------------------------------------------------------------------
+    */
     Route::view('/tenants', 'tenants.index')->name('tenants.index');
-    Route::view('/url', 'url.index')->name('url.index');
+    Route::view('/urls', 'url.index')->name('url.index');
 
     /*
     |--------------------------------------------------------------------------
-    | Admin API (Alpine.js consumes these)
+    | API (JSON ONLY — Alpine uses these)
     |--------------------------------------------------------------------------
     */
-    Route::group(function () {
+    Route::prefix('api')->group(function () {
 
         // Tenants
         Route::get('/tenants', [TenantController::class, 'index']);
@@ -42,17 +47,15 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::put('/tenants/{tenant}', [TenantController::class, 'update']);
         Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy']);
         Route::post('/tenants/{id}/restore', [TenantController::class, 'restore']);
-
         Route::post('/tenants/bulk-delete', [TenantController::class, 'bulkDelete']);
         Route::post('/tenants/bulk-restore', [TenantController::class, 'bulkRestore']);
 
         // URLs
-        Route::get('/url', [UrlController::class, 'index']);
-        Route::post('/url', [UrlController::class, 'store']);
-        Route::delete('/url/{url}', [UrlController::class, 'destroy']);
-        Route::post('/url/{id}/restore', [UrlController::class, 'restore']);
-
-        Route::post('/url/bulk-delete', [UrlController::class, 'bulkDelete']);
-        Route::post('/url/bulk-restore', [UrlController::class, 'bulkRestore']);
+        Route::get('/urls', [UrlController::class, 'index']);
+        Route::post('/urls', [UrlController::class, 'store']);
+        Route::delete('/urls/{url}', [UrlController::class, 'destroy']);
+        Route::post('/urls/{id}/restore', [UrlController::class, 'restore']);
+        Route::post('/urls/bulk-delete', [UrlController::class, 'bulkDelete']);
+        Route::post('/urls/bulk-restore', [UrlController::class, 'bulkRestore']);
     });
 });
