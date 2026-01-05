@@ -9,10 +9,11 @@ class InternalAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        $token = $request->bearerToken();
-
         abort_unless(
-            $token && hash_equals($token, config('services.internal.token')),
+            hash_equals(
+                (string) $request->bearerToken(),
+                (string) config('services.internal.token')
+            ),
             401,
             'Unauthorized internal request'
         );
