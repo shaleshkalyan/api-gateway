@@ -3,25 +3,22 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Services\RedirectResolver;
+use App\Jobs\RecordClickJob;
 
 class RedirectController
 {
-    public function handle(string $short_code, Request $request)
+    public function handle(string $short_code, Request $request, RedirectResolver $resolver)
     {
-        $url = DB::table('url_mapping')
-            ->where('short_code', $short_code)
-            ->where('is_active', true)
-            ->first();
+        $url = $resolver->resolve($short_code);
 
         abort_if(!$url, 404);
 
-        DB::table('url_monitoring')->insert([
-            'url_id'     => $url->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => substr((string) $request->userAgent(), 0, 255),
-            'created_at' => now(),
-        ]);
+        RecordClickJob::dispatch(
+            $url->id,
+            $request->ip(),
+            substr((string) $request->userAgent(), 0, 255)
+        );
 
         return redirect()->away($url->original_url, 301);
     }

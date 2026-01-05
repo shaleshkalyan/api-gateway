@@ -9,6 +9,4 @@ Route::get('/ping', function () {
         'service' => 'running fine'
     ]);
 });
-Route::middleware(['internal.auth'])->group(function () {
-    Route::post('/shorten', [ShortenController::class, 'store']);
-});
+Route::middleware(['trace', 'internal.auth'])->post('/shorten', [ShortenController::class, 'store']);

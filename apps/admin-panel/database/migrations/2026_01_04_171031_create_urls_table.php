@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->text('original_url');
             $table->string('short_code', 16);
+            $table->text('short_url');
             $table->unsignedBigInteger('created_by');
             $table->boolean('is_active')->default(true);
             $table->timestamps();

@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use App\Http\Middleware\InternalAuth;
+use App\Http\Middleware\Trace;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function ($middleware) {
         $middleware->alias([
             'internal.auth' => InternalAuth::class,
+            'trace' => Trace::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
