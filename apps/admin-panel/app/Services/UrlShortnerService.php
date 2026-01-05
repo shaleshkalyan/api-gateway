@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 class UrlShortnerService
 {
-    public function create(string $url, int $userId, int $tenantId): array
+    public function shorten(string $url, int $userId, int $tenantId): array
     {
         $response = Http::withToken(config('services.url_shortner.token'))
             ->post(config('services.url_shortner.endpoint').'api/shorten', [

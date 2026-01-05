@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->text('short_url');
             $table->unsignedBigInteger('created_by');
             $table->boolean('is_active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->unique(['tenant_id', 'short_code']);

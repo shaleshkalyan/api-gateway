@@ -2,60 +2,59 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tenant;
+use App\Models\UrlMapping;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\UrlShortnerService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
-class UrlController
+class UrlController extends Controller
 {
-    /**
-     * List URLs (read-only)
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $urls = DB::table('url_mapping')
-            ->latest()
-            ->paginate(20);
+        $query = UrlMapping::with('tenant');
 
-        return view('url.index', compact('urls'));
+        if ($request->boolean('trashed')) {
+            return $query->onlyTrashed()->latest()->get();
+        }
+
+        return $query->latest()->get();
     }
 
-    /**
-     * Show create URL form
-     * (NEW: load tenants for dropdown)
-     */
-    public function create()
+    public function store(Request $request, UrlShortnerService $client)
     {
-        $tenants = Tenant::orderBy('name')->get();
-
-        return view('url.create', compact('tenants'));
-    }
-
-    /**
-     * Store new short URL
-     * (NEW: accept + forward tenant_id)
-     */
-    public function store(Request $request, UrlShortnerService $service)
-    {
-        $validated = $request->validate([
-            'original_url' => ['required', 'url', 'max:2048'],
-            'tenant_id'    => ['required', 'exists:tenants,id'],
+        $data = $request->validate([
+            'tenant_id' => 'required|exists:tenants,id',
+            'original_url' => 'required|url',
         ]);
 
-        $response = $service->create(
-            $validated['original_url'],
+        return $client->shorten(
+            $data['original_url'],
             Auth::id(),
-            $validated['tenant_id']
+            $data['tenant_id']
         );
-        Log::info('URL Shortner response', [
-            'status' => $response['status'],
-            'body' => $response['body'],
-        ]);
-        return redirect()
-            ->route('url.index')
-            ->with('success', 'Short URL created successfully');
+    }
+
+    public function destroy(UrlMapping $url)
+    {
+        $url->delete();
+        return response()->noContent();
+    }
+
+    public function restore($id)
+    {
+        UrlMapping::withTrashed()->where('id', $id)->restore();
+        return response()->noContent();
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        UrlMapping::whereIn('id', $request->ids)->delete();
+        return response()->noContent();
+    }
+
+    public function bulkRestore(Request $request)
+    {
+        UrlMapping::withTrashed()->whereIn('id', $request->ids)->restore();
+        return response()->noContent();
     }
 }

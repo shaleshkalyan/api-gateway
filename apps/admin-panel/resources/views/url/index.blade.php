@@ -1,22 +1,119 @@
 <x-layout>
-    <h1>View All URLs</h1>
+    <div x-data="urlCrud()" x-init="load()">
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Short Code</th>
-                <th>Original URL</th>
-                <th>Tenant</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($urls as $url)
+        <h1>URLs</h1>
+        <button class="btn" @click="openCreate()">+ New URL</button>
+
+        <table class="mt-4">
+            <thead>
                 <tr>
-                    <td>{{ $url->short_code }}</td>
-                    <td>{{ $url->original_url }}</td>
-                    <td>{{ $url->tenant_id }}</td>
+                    <th>Tenant</th>
+                    <th>Short URL</th>
+                    <th>Original URL</th>
+                    <th>Actions</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <template x-for="url in urls" :key="url.id">
+                    <tr>
+                        <td x-text="url.tenant.name"></td>
+                        <td x-text="url.short_url"></td>
+                        <td x-text="url.original_url"></td>
+                        <td>
+                            <button class="btn-danger" @click="remove(url.id)">Delete</button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+
+        <!-- MODAL -->
+        <div x-show="showModal" class="modal-backdrop">
+            <div class="modal">
+                <h2>New URL</h2>
+
+                <select x-model="form.tenant_id">
+                    <option value="">Select Tenant</option>
+                    <template x-for="t in tenants" :key="t.id">
+                        <option :value="t.id" x-text="t.name"></option>
+                    </template>
+                </select>
+
+                <input x-model="form.original_url" placeholder="Original URL">
+
+                <div class="mt-4">
+                    <button class="btn" @click="save()">Create</button>
+                    <button @click="close()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function urlCrud() {
+            return {
+                urls: [],
+                tenants: [],
+                selected: [],
+                showDeleted: false,
+                showModal: false,
+
+                form: {
+                    tenant_id: '',
+                    original_url: ''
+                },
+
+                async load() {
+                    const urlEndpoint = this.showDeleted ?
+                        '/admin/api/urls?trashed=1' :
+                        '/admin/api/urls';
+
+                    this.urls = await fetch(urlEndpoint).then(r => r.json());
+                    this.tenants = await fetch('/admin/api/tenants').then(r => r.json());
+                },
+
+                openCreate() {
+                    this.form = {
+                        tenant_id: '',
+                        original_url: ''
+                    };
+                    this.showModal = true;
+                },
+
+                close() {
+                    this.showModal = false;
+                },
+
+                async save() {
+                    await fetch('/admin/api/urls', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document
+                                .querySelector('meta[name=csrf-token]')
+                                .content
+                        },
+                        body: JSON.stringify(this.form)
+                    });
+
+                    this.close();
+                    this.load();
+                },
+
+                async remove(id) {
+                    await fetch(`/admin/api/urls/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document
+                                .querySelector('meta[name=csrf-token]')
+                                .content
+                        }
+                    });
+
+                    this.load();
+                }
+            }
+        }
+    </script>
 </x-layout>

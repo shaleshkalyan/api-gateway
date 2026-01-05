@@ -3,14 +3,25 @@
         <strong>{{ config('app.name') }}</strong>
 
         @auth
-            <nav>
-                <a href="{{ route('dashboard') }}">Dashboard</a>
-                <a href="{{ route('tenants.create') }}">Add Tenants</a>
-                <a href="{{ route('url.create') }}">Add URL</a>
+            <nav class="nav">
+                <a href="{{ route('dashboard') }}"
+                   class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    Dashboard
+                </a>
 
-                <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                <a href="{{ url('tenants') }}"
+                   class="{{ request()->is('tenants*') ? 'active' : '' }}">
+                    Tenants
+                </a>
+
+                <a href="{{ url('url') }}"
+                   class="{{ request()->is('url*') ? 'active' : '' }}">
+                    URLs
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}" class="inline">
                     @csrf
-                    <button class="btn btn-danger">Logout</button>
+                    <button type="submit" class="btn btn-danger">Logout</button>
                 </form>
             </nav>
         @endauth
