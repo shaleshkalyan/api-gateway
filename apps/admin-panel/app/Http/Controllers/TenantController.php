@@ -17,7 +17,7 @@ class TenantController extends Controller
 
         return $query
             ->whereNull('deleted_at')
-            ->where('is_active', 1)
+            ->where('status', 'active')
             ->orderBy('name')
             ->get();
     }
