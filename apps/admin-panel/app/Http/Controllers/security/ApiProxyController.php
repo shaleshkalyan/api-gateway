@@ -6,50 +6,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\UrlMapping;
-use App\Models\ClientToken;
+use App\Models\Tenant;
 
 class ApiProxyController extends Controller
 {
     public function handle(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | 1️⃣ Resolve FULL request URL
-        |--------------------------------------------------------------------------
-        */
         $publicUrl = $request->url();          // https://gateway.app/x9A2kP
         $method    = strtoupper($request->method());
-
-        /*
-        |--------------------------------------------------------------------------
-        | 2️⃣ Authenticate CLIENT using token
-        |--------------------------------------------------------------------------
-        */
         $rawToken = $request->bearerToken();
         abort_unless($rawToken, 401, 'Missing API token');
 
-        $client = ClientToken::where('is_active', 1)
+        $client = Tenant::where('status', 'active')
             ->where('token', hash('sha256', $rawToken))
             ->first();
 
         abort_unless($client, 401, 'Invalid API token');
 
-        /*
-        |--------------------------------------------------------------------------
-        | 3️⃣ Resolve URL mapping (FULL URL + METHOD + TENANT)
-        |--------------------------------------------------------------------------
-        */
         $mapping = UrlMapping::where('short_url', $publicUrl)
             ->where('method', $method)
-            ->where('tenant_id', $client->tenant_id)
+            ->where('tenant_id', $client->id)
             ->where('is_active', 1)
             ->firstOrFail();
 
-        /*
-        |--------------------------------------------------------------------------
-        | 4️⃣ Forward request to INTERNAL API
-        |--------------------------------------------------------------------------
-        */
         try {
             $response = Http::withToken(config('services.gateway.token'))
                 ->timeout(10)
@@ -66,11 +45,6 @@ class ApiProxyController extends Controller
                     ]
                 );
 
-            /*
-            |--------------------------------------------------------------------------
-            | 5️⃣ Return response
-            |--------------------------------------------------------------------------
-            */
             return response(
                 $response->body(),
                 $response->status()
