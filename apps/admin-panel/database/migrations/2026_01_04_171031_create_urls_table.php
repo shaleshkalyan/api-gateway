@@ -11,12 +11,15 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->text('original_url');
-            $table->string('short_code', 16);
-            $table->text('short_url');
+            $table->string('short_code', 32);
+            $table->string('short_url', 255);
+            $table->string('method', 10)->default('POST');
             $table->unsignedBigInteger('created_by');
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();
+
+            $table->index(['tenant_id', 'short_url', 'method']);
 
             $table->unique(['tenant_id', 'short_code']);
         });

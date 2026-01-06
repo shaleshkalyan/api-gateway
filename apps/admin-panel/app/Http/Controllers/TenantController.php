@@ -27,7 +27,7 @@ class TenantController extends Controller
         return Tenant::create(
             $request->validate([
                 'name' => 'required',
-                'slug' => 'required|alpha_dash|unique:tenants,slug',
+                'slug' => 'required|unique:tenants,slug',
             ])
         );
     }

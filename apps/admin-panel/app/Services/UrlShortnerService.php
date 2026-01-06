@@ -8,7 +8,7 @@ use Throwable;
 
 class UrlShortnerService
 {
-    public function shorten(string $url, int $userId, int $tenantId): array
+    public function shorten(string $url, int $userId, int $tenantId, string $method = 'POST'): array
     {
         try {
             $endpoint = rtrim(config('services.url_shortner.endpoint'), '/')
@@ -20,6 +20,7 @@ class UrlShortnerService
                 ->withToken(config('services.url_shortner.token'))
                 ->post($endpoint, [
                     'original_url' => $url,
+                    'method' => $method,
                     'created_by'   => $userId,
                     'tenant_id'    => $tenantId,
                 ]);

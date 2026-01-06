@@ -25,12 +25,14 @@ class UrlController extends Controller
         $data = $request->validate([
             'tenant_id' => 'required|exists:tenants,id',
             'original_url' => 'required|url',
+            'method' => 'required|in:POST,GET,PUT,DELETE,PATCH',
         ]);
 
         return $client->shorten(
             $data['original_url'],
             Auth::id(),
-            $data['tenant_id']
+            $data['tenant_id'],
+            $data['method'],
         );
     }
 

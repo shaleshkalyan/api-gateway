@@ -13,12 +13,14 @@ class ShortenController
             'original_url' => ['required', 'url', 'max:2048'],
             'tenant_id'    => ['required', 'integer'],
             'created_by'   => ['required', 'integer'],
+            'method'       => ['required', 'in:POST,GET,PUT,DELETE,PATCH'],
         ]);
 
         $result = $service->create(
             $validated['original_url'],
             $validated['tenant_id'],
-            $validated['created_by']
+            $validated['created_by'],
+            $validated['method'],
         );
 
         return response()->json([

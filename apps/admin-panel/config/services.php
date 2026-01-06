@@ -38,4 +38,7 @@ return [
         'endpoint' => env('URL_SHORTNER_ENDPOINT'),
         'token' => env('URL_SHORTNER_TOKEN'),
     ],
+    'gateway' => [
+        'token' => env('GATEWAY_TOKEN'),
+    ],
 ];

@@ -11,12 +11,14 @@ class UrlCreationService
     public function create(
         string $originalUrl,
         int $tenantId,
-        int $createdBy
+        int $createdBy,
+        string $method = 'POST',
     ): array {
 
         $existing = DB::table('url_mapping')
         ->where('tenant_id', $tenantId)
         ->where('original_url', $originalUrl)
+        ->where('method', $method)
         ->first();
 
         if ($existing) {
@@ -54,6 +56,7 @@ class UrlCreationService
             'original_url' => $originalUrl,
             'short_code'   => $shortCode,
             'short_url'    => $shortUrl,
+            'method'       => $method,
             'created_by'   => $createdBy,
             'is_active'    => true,
             'created_at'   => now(),
