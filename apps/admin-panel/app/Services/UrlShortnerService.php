@@ -11,13 +11,13 @@ class UrlShortnerService
     public function shorten(string $url, int $userId, int $tenantId, string $method = 'POST'): array
     {
         try {
-            $endpoint = rtrim(config('services.url_shortner.endpoint'), '/')
+            $endpoint = rtrim(config('services.internal.endpoint'), '/')
                 . '/api/shorten';
 
 
             $response = Http::timeout(5)
                 ->retry(2, 200)
-                ->withToken(config('services.url_shortner.token'))
+                ->withToken(config('services.internal.token'))
                 ->post($endpoint, [
                     'original_url' => $url,
                     'method' => $method,

@@ -26,7 +26,7 @@ class ApiProxyController extends Controller
             ->firstOrFail();
 
         try {
-            $response = Http::withToken(config('services.gateway.token'))
+            $response = Http::withToken(config('services.internal.token'))
                 ->timeout(10)
                 ->send(
                     $method,
