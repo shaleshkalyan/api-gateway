@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Tenant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use Exception;
 
 class TenantController extends Controller
 {
@@ -12,59 +14,113 @@ class TenantController extends Controller
         $query = Tenant::query();
 
         if ($request->boolean('trashed')) {
-            return $query->onlyTrashed()->orderBy('name')->get();
+             $tenants = $query->onlyTrashed()->orderBy('name')->get();
+        } else {
+             $tenants = $query
+                 ->orderBy('name')
+                 ->get();
         }
 
-        return $query
-            ->whereNull('deleted_at')
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get();
+        return view('tenants.index', [
+            'tenants' => $tenants,
+        ]);
     }
 
     public function store(Request $request)
     {
-        return Tenant::create(
-            $request->validate([
-                'name' => 'required',
-                'slug' => 'required|unique:tenants,slug',
-            ])
-        );
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'slug' => 'required|string|alpha_dash|unique:tenants,slug',
+            ]);
+
+            Tenant::create($data);
+
+            return Redirect::route('tenants.index')
+                ->with('success', 'API Client created successfully!');
+
+        } catch (Exception $e) {
+            return Redirect::route('tenants.index')
+                ->with('error', 'Failed to create API Client. Please try again.');
+        }
     }
 
     public function update(Request $request, Tenant $tenant)
     {
-        $tenant->update(
-            $request->validate([
-                'name' => 'required',
-                'slug' => "required|alpha_dash|unique:tenants,slug,{$tenant->id}",
-            ])
-        );
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'slug' => "required|string|alpha_dash|unique:tenants,slug,{$tenant->id}",
+            ]);
 
-        return $tenant;
+            $tenant->update($data);
+
+            return Redirect::route('tenants.index')
+                ->with('success', 'API Client updated successfully!');
+
+        } catch (Exception $e) {
+            return Redirect::route('tenants.index')
+                ->with('error', 'Failed to update API Client. Please try again.');
+        }
     }
 
     public function destroy(Tenant $tenant)
     {
-        $tenant->delete();
-        return response()->noContent();
+        try {
+            $tenant->delete();
+            
+            return Redirect::route('tenants.index')
+                ->with('success', 'API Client deleted successfully!');
+                
+        } catch (Exception $e) {
+            return Redirect::route('tenants.index')
+                ->with('error', 'Failed to delete API Client. It may have associated data.');
+        }
     }
 
     public function restore($id)
     {
-        Tenant::withTrashed()->where('id', $id)->restore();
-        return response()->noContent();
+        try {
+            Tenant::withTrashed()->where('id', $id)->restore();
+            
+            return Redirect::back()->with('success', 'API Client restored.');
+
+        } catch (Exception $e) {
+            return Redirect::back()->with('error', 'Failed to restore API Client.');
+        }
     }
 
     public function bulkDelete(Request $request)
     {
-        Tenant::whereIn('id', $request->ids)->delete();
-        return response()->noContent();
+        try {
+            $request->validate([
+                'ids' => 'required|array',
+                'ids.*' => 'exists:tenants,id',
+            ]);
+            
+            $deletedCount = Tenant::whereIn('id', $request->ids)->delete();
+            
+            return Redirect::back()->with('success', $deletedCount . ' API Clients deleted.');
+            
+        } catch (Exception $e) {
+            return Redirect::back()->with('error', 'Failed to perform bulk delete operation.');
+        }
     }
 
     public function bulkRestore(Request $request)
     {
-        Tenant::withTrashed()->whereIn('id', $request->ids)->restore();
-        return response()->noContent();
+        try {
+            $request->validate([
+                'ids' => 'required|array',
+                'ids.*' => 'exists:tenants,id',
+            ]);
+            
+            Tenant::withTrashed()->whereIn('id', $request->ids)->restore();
+            
+            return Redirect::back()->with('success', count($request->ids) . ' API Clients restored.');
+            
+        } catch (Exception $e) {
+            return Redirect::back()->with('error', 'Failed to perform bulk restore operation.');
+        }
     }
 }

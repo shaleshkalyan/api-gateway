@@ -1,166 +1,146 @@
 <x-layout>
-    <div x-data="urlCrud()" x-init="load()">
+    <div class="container py-4">
 
-        <div class="flex justify-between items-center">
-            <h1>API URL Mappings</h1>
-            <button class="btn" @click="openCreate()">+ New API Mapping</button>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">API URL Mappings</h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#urlMappingModal" data-action="create">
+                + New API Mapping
+            </button>
         </div>
 
-        <table class="mt-4">
-            <thead>
-                <tr>
-                    <th>Tenant</th>
-                    <th>Method</th>
-                    <th>Public URL</th>
-                    <th>Original URL</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+        @if (session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+        
+        <div class="card shadow-sm mt-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Tenant</th>
+                                <th>Method</th>
+                                <th>Public URL</th>
+                                <th>Original URL</th>
+                                <th>Status</th>
+                                <th style="width: 200px;">Actions</th>
+                            </tr>
+                        </thead>
 
-            <tbody>
-                <template x-for="url in urls" :key="url.id">
-                    <tr>
-                        <td x-text="url.tenant.name"></td>
+                        <tbody>
+                            @forelse($urls as $url) 
+                                <tr>
+                                    <td>{{ $url->tenant->name ?? 'N/A' }}</td>
 
-                        <td>
-                            <span class="badge" x-text="url.method"></span>
-                        </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ $url->method }}</span>
+                                    </td>
 
-                        <td class="font-mono text-sm"
-                            x-text="url.short_url ?? 'Generating…'">
-                        </td>
+                                    <td class="font-monospace small">{{ $url->short_url ?? 'Generating…' }}</td>
 
-                        <td class="text-xs text-gray-600"
-                            x-text="url.original_url">
-                        </td>
+                                    <td class="text-secondary small">{{ $url->original_url }}</td>
 
-                        <td>
-                            <span
-                                :class="url.is_active ? 'text-green-600' : 'text-red-600'"
-                                x-text="url.is_active ? 'Active' : 'Disabled'">
-                            </span>
-                        </td>
+                                    <td>
+                                        <span class="{{ $url->is_active ? 'text-success' : 'text-danger' }}">
+                                            {{ $url->is_active ? 'Active' : 'Disabled' }}
+                                        </span>
+                                    </td>
 
-                        <td>
-                            <button class="btn-danger" @click="toggle(url)">
-                                Toggle
-                            </button>
-                        </td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#urlMappingModal" 
+                                            data-action="edit"
+                                            data-id="{{ $url->id }}"
+                                            data-tenant-id="{{ $url->tenant_id }}"
+                                            data-method="{{ $url->method }}"
+                                            data-original-url="{{ $url->original_url }}"
+                                            data-is-active="{{ $url->is_active ? '1' : '0' }}"
+                                            data-index-route="{{ route('url.index') }}"
+                                            >
+                                            Edit
+                                        </button>
+                                        
+                                        <form action="{{ route('url.toggleStatus', $url) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm {{ $url->is_active ? 'btn-warning' : 'btn-success' }}">
+                                                {{ $url->is_active ? 'Disable' : 'Activate' }}
+                                            </button>
+                                        </form>
 
-        <!-- MODAL -->
-        <div x-show="showModal" class="modal-backdrop">
-            <div class="modal">
-                <h2 x-text="form.id ? 'Edit API Mapping' : 'New API Mapping'"></h2>
-
-                <select x-model="form.tenant_id">
-                    <option value="">Select Tenant</option>
-                    <template x-for="t in tenants" :key="t.id">
-                        <option :value="t.id" x-text="t.name"></option>
-                    </template>
-                </select>
-
-                <select x-model="form.method">
-                    <option value="">HTTP Method</option>
-                    <option>GET</option>
-                    <option>POST</option>
-                    <option>PUT</option>
-                    <option>PATCH</option>
-                    <option>DELETE</option>
-                </select>
-
-                <input
-                    x-model="form.original_url"
-                    placeholder="Original API URL (hidden from clients)"
-                >
-
-                <label class="flex items-center mt-2">
-                    <input type="checkbox" x-model="form.is_active">
-                    <span class="ml-2">Active</span>
-                </label>
-
-                <div class="mt-4">
-                    <button class="btn" @click="save()">Save</button>
-                    <button @click="close()">Cancel</button>
+                                        <form action="{{ route('url.destroy', $url) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this mapping?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted p-4">No API URL Mappings found.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <script>
-        function urlCrud() {
-            return {
-                urls: [],
-                tenants: [],
-                showModal: false,
+    <div class="modal fade" id="urlMappingModal" tabindex="-1" aria-labelledby="urlMappingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="urlMappingForm" method="POST" action="{{ route('url.store') }}">
+                    @csrf
+                    @method('POST')
 
-                form: {
-                    id: null,
-                    tenant_id: '',
-                    method: '',
-                    original_url: '',
-                    is_active: true
-                },
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="urlMappingModalLabel">New API Mapping</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        
+                        <div class="mb-3">
+                            <label for="tenant_id" class="form-label">Select Tenant</label>
+                            <select name="tenant_id" id="tenant_id" class="form-select" required>
+                                <option value="">Select Tenant</option>
+                                @foreach($tenants as $tenant)
+                                    <option value="{{ $tenant->id }}">{{ $tenant->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                async load() {
-                    this.urls = await fetch('/api/urls').then(r => r.json());
-                    this.tenants = await fetch('/api/tenants').then(r => r.json());
-                },
+                        <div class="mb-3">
+                            <label for="method" class="form-label">HTTP Method</label>
+                            <select name="method" id="method" class="form-select" required>
+                                <option value="">HTTP Method</option>
+                                <option>GET</option>
+                                <option>POST</option>
+                                <option>PUT</option>
+                                <option>PATCH</option>
+                                <option>DELETE</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="original_url" class="form-label">Original API URL</label>
+                            <input type="url" name="original_url" id="original_url" class="form-control" placeholder="e.g., https://api.service.com/v1/data" required>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input type="checkbox" name="is_active" id="is_active" class="form-check-input" value="1" checked>
+                            <label class="form-check-label" for="is_active">Active</label>
+                        </div>
 
-                openCreate() {
-                    this.form = {
-                        id: null,
-                        tenant_id: '',
-                        method: '',
-                        original_url: '',
-                        is_active: true
-                    };
-                    this.showModal = true;
-                },
-
-                close() {
-                    this.showModal = false;
-                },
-
-                async save() {
-                    const method = this.form.id ? 'PUT' : 'POST';
-                    const url = this.form.id
-                        ? `/api/urls/${this.form.id}`
-                        : '/api/urls';
-
-                    await fetch(url, {
-                        method,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document
-                                .querySelector('meta[name=csrf-token]')
-                                .content
-                        },
-                        body: JSON.stringify(this.form)
-                    });
-
-                    this.close();
-                    this.load();
-                },
-
-                async toggle(item) {
-                    await fetch(`/api/urls/${item.id}/toggle`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document
-                                .querySelector('meta[name=csrf-token]')
-                                .content
-                        }
-                    });
-
-                    this.load();
-                }
-            }
-        }
-    </script>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveButton">Save Mapping</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="{{ asset('js/urlMapping.js') }}"></script>
 </x-layout>

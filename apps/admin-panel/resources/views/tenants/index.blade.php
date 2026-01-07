@@ -1,127 +1,92 @@
 <x-layout>
-    <div x-data="tenantCrud()" x-init="load()">
+    <div class="container-fluid py-4">
 
-        <h1>Tenants</h1>
-        <button class="btn" @click="openCreate()">+ New Tenant</button>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">API Clients Management</h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tenantModal" data-action-type="create">
+                <i class="bi bi-plus-lg me-1"></i> + New API Client
+            </button>
+        </div>
 
-        <table class="mt-4">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Slug</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template x-for="tenant in tenants" :key="tenant.id">
-                    <tr>
-                        <td x-text="tenant.name"></td>
-                        <td x-text="tenant.slug"></td>
-                        <td>
-                            <button @click="openEdit(tenant)">Edit</button>
-                            <button class="btn-danger" @click="remove(tenant.id)">Delete</button>
-                        </td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Client ID / Slug</th>
+                                <th scope="col" style="width: 200px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($tenants as $tenant)
+                            <tr>
+                                <td>{{ $tenant->name }}</td>
+                                <td>{{ $tenant->slug }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-info me-2"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#tenantModal"
+                                        data-action-type="edit"
+                                        data-id="{{ $tenant->id }}"
+                                        data-name="{{ $tenant->name }}"
+                                        data-slug="{{ $tenant->slug }}">
+                                        Edit
+                                    </button>
 
-        <!-- MODAL -->
-        <div x-show="showModal" class="modal-backdrop">
-            <div class="modal">
-                <h2 x-text="form.id ? 'Edit Tenant' : 'New Tenant'"></h2>
-
-                <input x-model="form.name" placeholder="Name">
-                <input x-model="form.slug" placeholder="Slug">
-
-                <div class="mt-4">
-                    <button class="btn" @click="save()">Save</button>
-                    <button @click="close()">Cancel</button>
+                                    <form method="POST" action="{{ route('tenants.destroy', $tenant->id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this API Client?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="text-center text-muted p-4">No API clients found.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <script>
-        function tenantCrud() {
-            return {
-                tenants: [],
-                selected: [],
-                showDeleted: false,
-                showModal: false,
+    <div class="modal fade" id="tenantModal" tabindex="-1" aria-labelledby="tenantModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="tenantForm" method="POST" action="">
+                    @csrf
+                    @method('POST')
 
-                form: {
-                    id: null,
-                    name: '',
-                    slug: ''
-                },
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tenantModalLabel">New API Client</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
 
-                async load() {
-                    const url = this.showDeleted ?
-                        '/api/tenants?trashed=1' :
-                        '/api/tenants';
+                        <div class="mb-3">
+                            <label for="tenant-name" class="form-label">Client Name</label>
+                            <input id="tenant-name" name="name" type="text" class="form-control" required placeholder="Client Name">
+                        </div>
 
-                    const res = await fetch(url);
-                    this.tenants = await res.json();
-                },
+                        <div class="mb-3">
+                            <label for="tenant-slug" class="form-label">Client ID/Slug</label>
+                            <input id="tenant-slug" name="slug" type="text" class="form-control" required placeholder="unique-client-slug">
+                        </div>
 
-                openCreate() {
-                    this.form = {
-                        id: null,
-                        name: '',
-                        slug: ''
-                    };
-                    this.showModal = true;
-                },
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-                openEdit(tenant) {
-                    this.form = {
-                        id: tenant.id,
-                        name: tenant.name,
-                        slug: tenant.slug
-                    };
-                    this.showModal = true;
-                },
-
-                close() {
-                    this.showModal = false;
-                },
-
-                async save() {
-                    const method = this.form.id ? 'PUT' : 'POST';
-                    const url = this.form.id ?
-                        `/api/tenants/${this.form.id}` :
-                        '/api/tenants';
-
-                    await fetch(url, {
-                        method,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document
-                                .querySelector('meta[name=csrf-token]')
-                                .content
-                        },
-                        body: JSON.stringify(this.form)
-                    });
-
-                    this.close();
-                    this.load();
-                },
-
-                async remove(id) {
-                    await fetch(`/api/tenants/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document
-                                .querySelector('meta[name=csrf-token]')
-                                .content
-                        }
-                    });
-
-                    this.load();
-                }
-            }
-        }
-    </script>
+    <script src="{{ asset('js/tenants.js') }}"></script>
 </x-layout>
