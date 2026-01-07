@@ -16,10 +16,10 @@ class UrlCreationService
     ): array {
 
         $existing = DB::table('url_mapping')
-        ->where('tenant_id', $tenantId)
-        ->where('original_url', $originalUrl)
-        ->where('method', $method)
-        ->first();
+            ->where('tenant_id', $tenantId)
+            ->where('original_url', $originalUrl)
+            ->where('method', strtoupper($method))
+            ->first();
 
         if ($existing) {
             return [
@@ -28,25 +28,25 @@ class UrlCreationService
                 'duplicate'  => true,
             ];
         }
+
         $tenant = DB::table('tenants')
             ->select('id', 'slug')
             ->where('id', $tenantId)
             ->first();
 
-        if (!$tenant) {
-            throw new RuntimeException('Invalid tenant');
+        if (!$tenant || empty($tenant->slug)) {
+            throw new RuntimeException('Invalid tenant or missing slug');
         }
 
         do {
-            $shortCode = Str::random(6);
+            $shortCode = Str::random(8);
         } while (
             DB::table('url_mapping')
-                ->where('tenant_id', $tenantId)
                 ->where('short_code', $shortCode)
                 ->exists()
         );
 
-        $shortUrl = $this->buildTenantShortUrl(
+        $shortUrl = $this->buildGatewayUrl(
             $tenant->slug,
             $shortCode
         );
@@ -56,7 +56,7 @@ class UrlCreationService
             'original_url' => $originalUrl,
             'short_code'   => $shortCode,
             'short_url'    => $shortUrl,
-            'method'       => $method,
+            'method'       => strtoupper($method),
             'created_by'   => $createdBy,
             'is_active'    => true,
             'created_at'   => now(),
@@ -66,13 +66,21 @@ class UrlCreationService
         return [
             'short_code' => $shortCode,
             'short_url'  => $shortUrl,
+            'duplicate'  => false,
         ];
     }
 
-    private function buildTenantShortUrl(
+    /**
+     * Build tenant-aware API Gateway URL
+     */
+    private function buildGatewayUrl(
         string $tenantSlug,
         string $shortCode
     ): string {
-        return 'https://' . strtolower($tenantSlug) . '/' . $shortCode;
+        return rtrim(config('services.api_gateway.base_url'), '/')
+            . '/'
+            . strtolower($tenantSlug)
+            . '/'
+            . $shortCode;
     }
 }

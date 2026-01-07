@@ -14,14 +14,9 @@ class ApiProxyController extends Controller
     {
         $publicUrl = $request->url();          // https://gateway.app/x9A2kP
         $method    = strtoupper($request->method());
-        $rawToken = $request->bearerToken();
-        abort_unless($rawToken, 401, 'Missing API token');
 
         $client = Tenant::where('status', 'active')
-            ->where('token', hash('sha256', $rawToken))
             ->first();
-
-        abort_unless($client, 401, 'Invalid API token');
 
         $mapping = UrlMapping::where('short_url', $publicUrl)
             ->where('method', $method)

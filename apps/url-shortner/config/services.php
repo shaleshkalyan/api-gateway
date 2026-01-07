@@ -37,4 +37,7 @@ return [
     'internal' => [
         'token' => env('INTERNAL_API_TOKEN'),
     ],
+    'api_gateway' => [
+        'base_url' => env('API_GATEWAY_BASE_URL'),
+    ],
 ];
