@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\ApiProxyController;
+use App\Http\Controllers\Security\ApiProxyController;
 
 Route::middleware('gateway.auth')->group(function () {
 
