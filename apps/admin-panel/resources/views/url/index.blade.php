@@ -60,7 +60,7 @@
                                     <th>Public URL</th>
                                     <th>Original URL</th>
                                     <th>Status</th>
-                                    <th style="width: 180px;">Actions</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
 
@@ -95,14 +95,14 @@
                                             data-original-url="{{ $url->original_url }}"
                                             data-is-active="{{ $url->is_active ? '1' : '0' }}"
                                             data-index-route="{{ route('url.index') }}">
-                                            <i class="bi bi-pencil"></i>
+                                            EDIT <i class="bi bi-pencil"></i>
                                         </button>
 
                                         @if (request('trashed'))
                                         <form action="{{ route('url.restore', $url->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Restore this mapping?')">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-success" title="Restore">
-                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                                RESTORE <i class="bi bi-arrow-counterclockwise"></i>
                                             </button>
                                         </form>
                                         @else
@@ -110,7 +110,7 @@
                                             @csrf
                                             <button type="submit" class="btn btn-sm {{ $url->is_active ? 'btn-warning' : 'btn-success' }}"
                                                 title="{{ $url->is_active ? 'Disable Mapping' : 'Activate Mapping' }}">
-                                                <i class="bi {{ $url->is_active ? 'bi-lock' : 'bi-unlock' }}"></i>
+                                                {{ $url->is_active ? 'DISABLE' : 'ACTIVATE' }} <i class="bi {{ $url->is_active ? 'bi-lock' : 'bi-unlock' }}"></i>
                                             </button>
                                         </form>
 
@@ -118,7 +118,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                                                <i class="bi bi-trash"></i>
+                                                DELETE <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
                                         @endif
