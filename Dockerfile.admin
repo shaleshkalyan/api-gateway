@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------
-# STAGE 1: Dependency Installation
+# STAGE 1: Dependency Installation (Composer)
 # -----------------------------------------------------------------
 FROM composer:2.6 as vendor
 WORKDIR /app
@@ -8,15 +8,12 @@ COPY apps/admin-panel/composer.lock composer.lock
 RUN composer install --no-dev --no-scripts --prefer-dist --optimize-autoloader
 
 # -----------------------------------------------------------------
-# STAGE 2: Frontend Assets Compilation (Vite for Laravel 11/12)
+# STAGE 2: Frontend Assets Compilation (Vite/Node)
 # -----------------------------------------------------------------
 FROM node:20 as assets
 WORKDIR /app
-COPY apps/admin-panel/package*.json ./
-# Use --production flag for cleaner dependency installation
-RUN npm install --production
 COPY apps/admin-panel/ .
-# This runs the Vite build
+RUN npm install --production
 RUN npm run build 
 
 # -----------------------------------------------------------------
@@ -24,21 +21,18 @@ RUN npm run build
 # -----------------------------------------------------------------
 FROM php:8.2-fpm-alpine as admin_builder
 
-# Install Nginx, Supervisor, and necessary PHP extensions
 RUN apk add --no-cache nginx supervisor mariadb-client \
     && docker-php-ext-install pdo_mysql opcache bcmath zip 
 
 WORKDIR /var/www/html/app
+
 COPY apps/admin-panel/ .
 COPY --from=vendor /app/vendor/ vendor/
-# Copy compiled assets from Vite build output
 COPY --from=assets /app/public/build/ public/build/ 
 
-# Copy configurations
 COPY apps/admin-panel/docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY apps/admin-panel/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Set permissions
 RUN chown -R www-data:www-data /var/www/html/app \
     && chmod -R 775 storage bootstrap/cache
 
