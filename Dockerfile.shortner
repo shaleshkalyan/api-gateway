@@ -4,8 +4,8 @@
 FROM composer:2.6 as vendor
 WORKDIR /app
 # Copy only the composer files from the shortener app for caching
-COPY api-gateway/apps/url-shortner/composer.json composer.json
-COPY api-gateway/apps/url-shortner/composer.lock composer.lock
+COPY apps/url-shortner/composer.json composer.json
+COPY apps/url-shortner/composer.lock composer.lock
 RUN composer install --no-dev --no-scripts --prefer-dist --optimize-autoloader
 
 # -----------------------------------------------------------------
@@ -21,15 +21,15 @@ RUN apk add --no-cache nginx supervisor mariadb-client \
 WORKDIR /var/www/html/app
 
 # Copy the application code from the monorepo path
-COPY api-gateway/apps/url-shortner/ . 
+COPY apps/url-shortner/ . 
 
 # Copy dependencies from the vendor stage
 COPY --from=vendor /app/vendor/ vendor/
 
 # Copy Nginx and Supervisor configurations from the *correct* path
 # These configs manage the web server and the two running processes (Nginx and PHP-FPM)
-COPY api-gateway/apps/url-shortner/docker/nginx.conf /etc/nginx/conf.d/default.conf
-COPY api-gateway/apps/url-shortner/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY apps/url-shortner/docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/url-shortner/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Set permissions for the web server user (www-data)
 RUN chown -R www-data:www-data /var/www/html/app \
