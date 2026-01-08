@@ -13,6 +13,7 @@ Route::middleware('internal.auth')->group(function () {
 });
 
 Route::middleware(['trace', 'internal.auth'])->group(function () {
+    Route::get('/mappings/{id}', [ShortenController::class, 'show']);
     Route::post('/mappings', [ShortenController::class, 'store']);
     Route::put('/mappings/{id}', [ShortenController::class, 'update']);
     Route::delete('/mappings/{id}', [ShortenController::class, 'destroy']);

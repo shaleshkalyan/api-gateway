@@ -37,7 +37,8 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     Route::get('/urls', [UrlController::class, 'index'])->name('url.index');
     Route::post('/urls', [UrlController::class, 'store'])->name('url.store');
-    Route::post('/urls/{url}/toggle', [UrlController::class, 'toggleStatus'])->name('url.toggleStatus');
+    Route::put('/urls/{url}', [UrlController::class, 'update'])->name('url.update');
+    Route::post('/urls/{url}', [UrlController::class, 'toggleStatus'])->name('url.toggleStatus'); // For Activate/Disable
     Route::delete('/urls/{url}', [UrlController::class, 'destroy'])->name('url.destroy');
     Route::post('/urls/bulk-delete', [UrlController::class, 'bulkDelete']);
     Route::post('/urls/bulk-restore', [UrlController::class, 'bulkRestore']);
