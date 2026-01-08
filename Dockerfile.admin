@@ -22,7 +22,12 @@ RUN npm run build
 FROM php:8.2-fpm-alpine as admin_builder
 
 RUN apk add --no-cache nginx supervisor mariadb-client \
-    && docker-php-ext-install pdo_mysql opcache bcmath zip 
+    && apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS \
+        mariadb-connector-c-dev \
+        gmp-dev \
+    && docker-php-ext-install pdo_mysql opcache bcmath zip \
+    && apk del .build-deps 
 
 WORKDIR /var/www/html/app
 
