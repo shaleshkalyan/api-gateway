@@ -11,4 +11,13 @@ Route::middleware('internal.auth')->group(function () {
         ]);
     });
 });
-Route::middleware(['trace', 'internal.auth'])->post('/shorten', [ShortenController::class, 'store']);
+
+Route::middleware(['trace', 'internal.auth'])->group(function () {
+    Route::post('/mappings', [ShortenController::class, 'store']);
+    Route::put('/mappings/{id}', [ShortenController::class, 'update']);
+    Route::delete('/mappings/{id}', [ShortenController::class, 'destroy']);
+
+    // Bulk operations
+    Route::delete('/mappings/bulk-delete', [ShortenController::class, 'bulkDelete']);
+    Route::patch('/mappings/bulk-update', [ShortenController::class, 'bulkUpdate']);
+});

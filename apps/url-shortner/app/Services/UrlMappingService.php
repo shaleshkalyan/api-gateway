@@ -6,8 +6,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
 
-class UrlCreationService
+class UrlMappingService
 {
+    public function find(string $id)
+    {
+        $result = DB::table('url_mapping')
+            ->select('id', 'tenant_id', 'original_url', 'short_code', 'short_url', 'method', 'created_by', 'is_active', 'created_at', 'updated_at')
+            ->where('id', $id)
+            ->first();
+
+        if (!$result) {
+            throw new RuntimeException('Mapping not found');
+        }
+
+        return $result;
+    }
+    
     public function create(
         string $originalUrl,
         int $tenantId,

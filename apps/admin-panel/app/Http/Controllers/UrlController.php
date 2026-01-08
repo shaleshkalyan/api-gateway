@@ -18,9 +18,9 @@ class UrlController extends Controller
             $query = UrlMapping::with('tenant');
 
             if ($request->boolean('trashed')) {
-                 $urls = $query->onlyTrashed()->latest()->get();
+                $urls = $query->onlyTrashed()->latest()->get();
             } else {
-                 $urls = $query->latest()->get();
+                $urls = $query->latest()->get();
             }
             
             $tenants = Tenant::orderBy('name')->get(); 
@@ -45,7 +45,7 @@ class UrlController extends Controller
                 'is_active' => 'nullable|boolean', 
             ]);
 
-            $client->shorten(
+            $client->store(
                 $data['original_url'],
                 Auth::id(),
                 $data['tenant_id'],
@@ -56,11 +56,11 @@ class UrlController extends Controller
             return Redirect::route('url.index')->with('success', 'URL Mapping created and short URL generated.');
 
         } catch (Exception $e) {
-            return Redirect::back()->withInput()->with('error', 'Failed to create URL mapping. Please check inputs.');
+            return Redirect::back()->withInput()->with('error', 'Failed to create URL mapping: ' . $e->getMessage());
         }
     }
     
-    public function update(Request $request, UrlMapping $url)
+    public function update(Request $request, UrlMapping $url, UrlShortnerService $client)
     {
         try {
             $data = $request->validate([
@@ -70,67 +70,97 @@ class UrlController extends Controller
                 'is_active' => 'nullable|boolean', 
             ]);
 
-            $url->update($data);
+            $client->update(
+                $url->id,
+                $data['original_url'],
+                Auth::id(),
+                $data['tenant_id'],
+                $data['method'],
+                $data['is_active'] ?? false
+            );
             
             return Redirect::route('url.index')->with('success', 'URL Mapping updated successfully.');
             
         } catch (Exception $e) {
-            return Redirect::back()->withInput()->with('error', 'Failed to update URL mapping.');
+            return Redirect::back()->withInput()->with('error', 'Failed to update URL mapping: ' . $e->getMessage());
         }
     }
 
-    public function destroy(UrlMapping $url)
+    public function destroy(UrlMapping $url, UrlShortnerService $client)
     {
         try {
-            $url->delete();
+            $client->delete($url->id, Auth::id(), $url->tenant_id);
+
             return Redirect::back()->with('success', 'URL Mapping deleted successfully.');
         } catch (Exception $e) {
-            return Redirect::back()->with('error', 'Failed to delete URL Mapping. It may have associated records.');
+            return Redirect::back()->with('error', 'Failed to delete URL Mapping: ' . $e->getMessage());
         }
     }
 
-    public function restore($id)
+    public function restore($id, UrlShortnerService $client)
     {
         try {
-            UrlMapping::withTrashed()->where('id', $id)->restore();
+            $client->bulkUpdate(
+                [$id], 
+                ['deleted_at' => null],
+                Auth::id()
+            );
+
             return Redirect::back()->with('success', 'URL Mapping restored.');
         } catch (Exception $e) {
-            return Redirect::back()->with('error', 'Failed to restore URL Mapping.');
+            return Redirect::back()->with('error', 'Failed to restore URL Mapping: ' . $e->getMessage());
         }
     }
 
-    public function bulkDelete(Request $request)
+    public function bulkDelete(Request $request, UrlShortnerService $client)
     {
         try {
-            $request->validate(['ids' => 'required|array', 'ids.*' => 'exists:url_mappings,id']);
-            $count = UrlMapping::whereIn('id', $request->ids)->delete();
-            return Redirect::back()->with('success', $count . ' URL Mappings deleted.');
+            $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+
+            $result = $client->bulkDelete($request->ids, Auth::id());
+            $count = $result['deleted_count'] ?? count($request->ids);
+
+            return Redirect::back()->with('success', $count . ' URL Mappings deleted remotely.');
         } catch (Exception $e) {
-            return Redirect::back()->with('error', 'Failed to perform bulk delete.');
+            return Redirect::back()->with('error', 'Failed to perform bulk delete: ' . $e->getMessage());
         }
     }
 
-    public function bulkRestore(Request $request)
+    public function bulkRestore(Request $request, UrlShortnerService $client)
     {
         try {
-            $request->validate(['ids' => 'required|array', 'ids.*' => 'exists:url_mappings,id']);
-            $count = UrlMapping::withTrashed()->whereIn('id', $request->ids)->restore();
-            return Redirect::back()->with('success', $count . ' URL Mappings restored.');
+            $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
+
+            $result = $client->bulkUpdate(
+                $request->ids, 
+                ['deleted_at' => null], 
+                Auth::id()
+            );
+            $count = $result['updated_count'] ?? count($request->ids);
+
+            return Redirect::back()->with('success', $count . ' URL Mappings restored remotely.');
         } catch (Exception $e) {
-            return Redirect::back()->with('error', 'Failed to perform bulk restore.');
+            return Redirect::back()->with('error', 'Failed to perform bulk restore: ' . $e->getMessage());
         }
     }
     
-    public function toggleStatus(UrlMapping $url)
+    public function toggleStatus(UrlMapping $url, UrlShortnerService $client)
     {
         try {
-            $url->is_active = !$url->is_active;
-            $url->save();
+            $newStatus = !$url->is_active;
+
+            $client->bulkUpdate(
+                [$url->id], 
+                ['is_active' => $newStatus], 
+                Auth::id()
+            );
+            
+            $url->is_active = $newStatus;
             $status = $url->is_active ? 'Activated' : 'Disabled';
             
             return Redirect::back()->with('success', "Mapping successfully {$status}.");
         } catch (Exception $e) {
-            return Redirect::back()->with('error', 'Failed to toggle mapping status.');
+            return Redirect::back()->with('error', 'Failed to toggle mapping status: ' . $e->getMessage());
         }
     }
 }

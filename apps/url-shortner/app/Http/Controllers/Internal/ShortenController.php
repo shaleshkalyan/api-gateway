@@ -3,11 +3,19 @@
 namespace App\Http\Controllers\Internal;
 
 use Illuminate\Http\Request;
-use App\Services\UrlCreationService;
+use App\Services\UrlMappingService;
 
 class ShortenController
 {
-    public function store(Request $request, UrlCreationService $service)
+    public function show(UrlMappingService $service, string $id)
+    {
+        $result = $service->find($id);
+
+        return response()->json([
+            'mapping' => $result,
+        ]);
+    }
+    public function store(Request $request, UrlMappingService $service)
     {
         $validated = $request->validate([
             'original_url' => ['required', 'url', 'max:2048'],
