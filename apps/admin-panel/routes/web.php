@@ -40,6 +40,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/urls/{url}', [UrlController::class, 'update'])->name('url.update');
     Route::post('/urls/{url}', [UrlController::class, 'toggleStatus'])->name('url.toggleStatus'); // For Activate/Disable
     Route::delete('/urls/{url}', [UrlController::class, 'destroy'])->name('url.destroy');
-    Route::post('/urls/bulk-delete', [UrlController::class, 'bulkDelete']);
-    Route::post('/urls/bulk-restore', [UrlController::class, 'bulkRestore']);
+    Route::post('/urls/{id}/restore', [UrlController::class, 'restore'])->name('url.restore');
+    Route::post('/urls/bulk-delete', [UrlController::class, 'bulkDelete'])->name('url.bulkDelete');
+    Route::post('/urls/bulk-restore', [UrlController::class, 'bulkRestore'])->name('url.bulkRestore');
 });
