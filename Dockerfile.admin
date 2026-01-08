@@ -26,8 +26,9 @@ RUN apk add --no-cache nginx supervisor mariadb-client \
         $PHPIZE_DEPS \
         mariadb-connector-c-dev \
         gmp-dev \
+        libzip-dev \
     && docker-php-ext-install pdo_mysql opcache bcmath zip \
-    && apk del .build-deps 
+    && apk del .build-deps
 
 WORKDIR /var/www/html/app
 
