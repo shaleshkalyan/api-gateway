@@ -33,7 +33,9 @@ COPY apps/admin-panel/docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY apps/admin-panel/docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY apps/admin-panel/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN mkdir -p storage/framework/views \
+RUN mkdir -p \
+    storage/framework/sessions \
+    storage/framework/views \
     storage/framework/cache \
     storage/logs \
     bootstrap/cache \
