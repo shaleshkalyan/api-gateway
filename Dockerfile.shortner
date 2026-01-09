@@ -1,10 +1,19 @@
 # ------------------------------------------------------
-# URL-SHORTNER (API ONLY) — RAILWAY OPTIMIZED
+# STAGE 1: Composer dependencies
 # ------------------------------------------------------
+FROM composer:2.6 AS vendor
 
+WORKDIR /app
+COPY apps/url-shortner/composer.json composer.json
+COPY apps/url-shortner/composer.lock composer.lock
+RUN composer install --no-dev --prefer-dist --optimize-autoloader
+
+
+# ------------------------------------------------------
+# STAGE 2: Runtime (API ONLY)
+# ------------------------------------------------------
 FROM php:8.2-cli-alpine
 
-# Install system dependencies + PHP extensions
 RUN apk add --no-cache \
     mariadb-client \
     libzip \
@@ -15,19 +24,13 @@ RUN apk add --no-cache \
  && docker-php-ext-install pdo_mysql zip \
  && apk del .build-deps
 
-# Set working directory
 WORKDIR /app
 
 # Copy application source
 COPY apps/url-shortner/ .
 
-# Install PHP dependencies
-COPY apps/url-shortner/composer.json composer.json
-COPY apps/url-shortner/composer.lock composer.lock
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
- && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
- && composer install --no-dev --prefer-dist --optimize-autoloader \
- && rm composer-setup.php
+# Copy vendor from composer stage
+COPY --from=vendor /app/vendor vendor/
 
 # Create required Laravel directories
 RUN mkdir -p \
@@ -41,7 +44,6 @@ RUN mkdir -p \
 # Clear cached config (safe)
 RUN php artisan config:clear || true
 
-# Expose API port
 EXPOSE 8000
 
 # Start Laravel API server
