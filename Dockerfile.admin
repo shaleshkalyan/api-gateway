@@ -1,52 +1,74 @@
 # -----------------------------------------------------------------
 # STAGE 1: Dependency Installation (Composer)
 # -----------------------------------------------------------------
-FROM composer:2.6 as vendor
+FROM composer:2.6 AS vendor
 WORKDIR /app
 COPY apps/admin-panel/composer.json composer.json
 COPY apps/admin-panel/composer.lock composer.lock
-RUN composer install --no-dev --no-scripts --prefer-dist --optimize-autoloader
+
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --prefer-dist \
+    --optimize-autoloader
+
 
 # -----------------------------------------------------------------
-# STAGE 2: Frontend Assets Compilation (Vite/Node)
+# STAGE 2: Frontend Assets Compilation (Vite / Node)
 # -----------------------------------------------------------------
-FROM node:20 as assets
+FROM node:20 AS assets
 WORKDIR /app
 COPY apps/admin-panel/ .
 RUN npm install
-RUN npm run build 
+RUN npm run build
 
 # -----------------------------------------------------------------
-# STAGE 3: PHP Base Image and Application Setup
+# STAGE 3: PHP + Nginx + Supervisor (Build Image)
 # -----------------------------------------------------------------
-FROM php:8.2-fpm-alpine as admin_builder
+FROM php:8.2-fpm-alpine AS admin_builder
 
-RUN apk add --no-cache nginx supervisor mariadb-client \
-    && apk add --no-cache --virtual .build-deps \
+# Runtime dependencies (DO NOT REMOVE libzip)
+RUN apk add --no-cache \
+        nginx \
+        supervisor \
+        mariadb-client \
+        libzip
+
+# Build dependencies
+RUN apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
         mariadb-connector-c-dev \
         gmp-dev \
         libzip-dev \
-    && docker-php-ext-install pdo_mysql opcache bcmath zip \
+    && docker-php-ext-install \
+        pdo_mysql \
+        bcmath \
+        opcache \
+        zip \
     && apk del .build-deps
 
 WORKDIR /var/www/html/app
 
+# Application files
 COPY apps/admin-panel/ .
 COPY --from=vendor /app/vendor/ vendor/
-COPY --from=assets /app/public/build/ public/build/ 
+COPY --from=assets /app/public/build/ public/build/
 
+# Nginx + Supervisor configs
 COPY apps/admin-panel/docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY apps/admin-panel/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN mkdir -p /var/www/html/app/bootstrap/cache \
-    && mkdir -p /var/www/html/app/storage \
+# Permissions
+RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data /var/www/html/app \
-    && chmod -R 775 /var/www/html/app/storage \
-    && chmod -R 775 /var/www/html/app/bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache
+
+# Clear cached config (VERY IMPORTANT for Railway)
+RUN php artisan config:clear \
+    && php artisan cache:clear
 
 # -----------------------------------------------------------------
-# STAGE 4: Final Production Image
+# STAGE 4: Final Runtime Image
 # -----------------------------------------------------------------
 FROM admin_builder
 EXPOSE 8080
