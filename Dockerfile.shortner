@@ -39,6 +39,8 @@ RUN apk add --no-cache --virtual .build-deps \
         zip \
     && apk del .build-deps
 
+COPY apps/url-shortner/docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-app.con
+
 WORKDIR /var/www/html/app
 
 # Application code
