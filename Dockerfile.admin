@@ -35,5 +35,5 @@ RUN mkdir -p storage bootstrap/cache \
 
 RUN php artisan config:clear
 
-CMD ["sh", "-c", "sleep infinity"]
-# CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# CMD ["sh", "-c", "sleep infinity"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
