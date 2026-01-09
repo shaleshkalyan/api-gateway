@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Security;
+namespace App\Http\Controllers\Secure;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -13,7 +13,7 @@ class ApiProxyController extends Controller
 {
     public function handle(Request $request)
     {
-        $publicUrl = $request->url();          // https://gateway.app/x9A2kP
+        $publicUrl = $request->url();
         $method    = strtoupper($request->method());
 
         $client = Tenant::where('status', 'active')
