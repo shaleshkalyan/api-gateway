@@ -1,68 +1,31 @@
-# -----------------------------------------------------------------
-# STAGE 1: Dependency Installation (Composer)
-# -----------------------------------------------------------------
 FROM composer:2.6 AS vendor
 WORKDIR /app
-
 COPY apps/url-shortner/composer.json composer.json
 COPY apps/url-shortner/composer.lock composer.lock
+RUN composer install --no-dev --prefer-dist --optimize-autoloader
 
-RUN composer install \
-    --no-dev \
-    --no-scripts \
-    --prefer-dist \
-    --optimize-autoloader
+FROM php:8.2-fpm-alpine
 
-
-# -----------------------------------------------------------------
-# STAGE 2: PHP + Nginx + Supervisor (Build Image)
-# -----------------------------------------------------------------
-FROM php:8.2-fpm-alpine AS shortner_builder
-
-# Runtime dependencies (libzip MUST stay)
 RUN apk add --no-cache \
-        nginx \
-        supervisor \
-        mariadb-client \
-        libzip
-
-# Build dependencies
-RUN apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS \
-        mariadb-connector-c-dev \
-        gmp-dev \
-        libzip-dev \
-    && docker-php-ext-install \
-        pdo_mysql \
-        bcmath \
-        opcache \
-        zip \
+    nginx supervisor mariadb-client libzip \
+    && apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS mariadb-connector-c-dev libzip-dev \
+    && docker-php-ext-install pdo_mysql zip opcache \
     && apk del .build-deps
-
-COPY apps/url-shortner/docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-app.con
 
 WORKDIR /var/www/html/app
 
-# Application code
 COPY apps/url-shortner/ .
-COPY --from=vendor /app/vendor/ vendor/
+COPY --from=vendor /app/vendor vendor/
 
-# Nginx + Supervisor
-COPY apps/url-shortner/docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY apps/url-shortner/docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-app.conf
+COPY apps/url-shortner/docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY apps/url-shortner/docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY apps/url-shortner/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Permissions
-RUN mkdir -p storage bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html/app \
+RUN chown -R www-data:www-data /var/www/html/app \
     && chmod -R 775 storage bootstrap/cache
 
-# Clear cached config (CRITICAL for Railway)
 RUN php artisan config:clear
 
-
-# -----------------------------------------------------------------
-# STAGE 3: Final Runtime Image
-# -----------------------------------------------------------------
-FROM shortner_builder
-EXPOSE 8080
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
