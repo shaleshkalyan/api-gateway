@@ -13,13 +13,15 @@ class ApiProxyController extends Controller
 {
     public function handle(Request $request)
     {
-        $publicUrl = $request->url();
-        $method    = strtoupper($request->method());
+        $method     = strtoupper($request->method());
+        $tenantSlug = $request->route('tenantSlug');
+        $shortCode  = $request->route('shortCode');
 
         $client = Tenant::where('status', 'active')
-            ->first();
+            ->where('slug', $tenantSlug)
+            ->firstOrFail();
 
-        $mapping = UrlMapping::where('short_url', $publicUrl)
+        $mapping = UrlMapping::where('short_code', $shortCode)
             ->where('method', $method)
             ->where('tenant_id', $client->id)
             ->where('is_active', 1)
@@ -35,29 +37,26 @@ class ApiProxyController extends Controller
                         'query' => $request->query(),
                         'json' => $request->all(),
                         'headers' => [
-                            'X-Tenant-ID' => $client->tenant_id,
-                            'X-Client-ID' => $client->id,
+                            'X-CLIENT-ID' => $client->id,
                         ]
                     ]
                 );
 
-            return response(
-                $response->body(),
-                $response->status()
-            )->withHeaders(
-                collect($response->headers())
-                    ->map(fn ($v) => $v[0])
-                    ->toArray()
-            );
-
+            return response($response->body(), $response->status())
+                ->withHeaders(
+                    collect($response->headers())
+                        ->map(fn($v) => $v[0])
+                        ->toArray()
+                );
         } catch (\Throwable $e) {
             Log::error('Gateway forwarding failed', [
-                'url' => $publicUrl,
-                'error' => $e->getMessage()
+                'tenant' => $tenantSlug,
+                'short_code' => $shortCode,
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'message' => 'Service unavailable'
+                'message' => 'Service unavailable',
             ], 503);
         }
     }
