@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class TenantController extends Controller
@@ -40,6 +41,7 @@ class TenantController extends Controller
                 ->with('success', 'API Client created successfully!');
 
         } catch (Exception $e) {
+            Log::error('Tenant creation failed: ' . $e->getMessage(), ['exception' => $e]);
             return Redirect::route('tenants.index')
                 ->with('error', 'Failed to create API Client. Please try again.');
         }
@@ -59,6 +61,7 @@ class TenantController extends Controller
                 ->with('success', 'API Client updated successfully!');
 
         } catch (Exception $e) {
+            Log::error('Tenant update failed: ' . $e->getMessage(), ['exception' => $e]);
             return Redirect::route('tenants.index')
                 ->with('error', 'Failed to update API Client. Please try again.');
         }
@@ -73,6 +76,7 @@ class TenantController extends Controller
                 ->with('success', 'API Client deleted successfully!');
                 
         } catch (Exception $e) {
+            Log::error('Tenant deletion failed: ' . $e->getMessage(), ['exception' => $e]);
             return Redirect::route('tenants.index')
                 ->with('error', 'Failed to delete API Client. It may have associated data.');
         }
@@ -81,11 +85,14 @@ class TenantController extends Controller
     public function restore($id)
     {
         try {
-            Tenant::withTrashed()->where('id', $id)->restore();
-            
-            return Redirect::back()->with('success', 'API Client restored.');
+            $restoredCount = Tenant::withTrashed()->where('id', $id)->restore();
+            if ($restoredCount > 0) {
+                 return Redirect::back()->with('success', 'API Client restored successfully.');
+            }
+            return Redirect::back()->with('error', 'API Client not found for restoration or already active.');
 
         } catch (Exception $e) {
+            Log::error('Tenant restoration failed: ' . $e->getMessage(), ['exception' => $e]);
             return Redirect::back()->with('error', 'Failed to restore API Client.');
         }
     }
@@ -93,16 +100,17 @@ class TenantController extends Controller
     public function bulkDelete(Request $request)
     {
         try {
-            $request->validate([
+            $data = $request->validate([
                 'ids' => 'required|array',
                 'ids.*' => 'exists:tenants,id',
             ]);
             
-            $deletedCount = Tenant::whereIn('id', $request->ids)->delete();
+            $deletedCount = Tenant::whereIn('id', $data['ids'])->delete();
             
-            return Redirect::back()->with('success', $deletedCount . ' API Clients deleted.');
+            return Redirect::back()->with('success', $deletedCount . ' API Clients deleted successfully.');
             
         } catch (Exception $e) {
+            Log::error('Tenant bulk deletion failed: ' . $e->getMessage(), ['exception' => $e]);
             return Redirect::back()->with('error', 'Failed to perform bulk delete operation.');
         }
     }
@@ -115,11 +123,12 @@ class TenantController extends Controller
                 'ids.*' => 'exists:tenants,id',
             ]);
             
-            Tenant::withTrashed()->whereIn('id', $request->ids)->restore();
+            $restoredCount = Tenant::withTrashed()->whereIn('id', $request->ids)->restore();
             
-            return Redirect::back()->with('success', count($request->ids) . ' API Clients restored.');
+            return Redirect::route('tenants.index')->with('success', $restoredCount . ' API Clients restored successfully.');
             
         } catch (Exception $e) {
+            Log::error('Tenant bulk restoration failed: ' . $e->getMessage(), ['exception' => $e]);
             return Redirect::back()->with('error', 'Failed to perform bulk restore operation.');
         }
     }

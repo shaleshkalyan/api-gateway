@@ -45,8 +45,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const action = this.getAttribute('data-bulk-action');
             const confirmMessage = this.getAttribute('data-confirm-message');
+            const checkedIds = Array.from(document.querySelectorAll('.tenant-checkbox:checked')).map(cb => cb.value);
+
+            if (checkedIds.length === 0) {
+                alert("Please select at least one API Client to perform a bulk action.");
+                return; 
+            }
 
             if (confirm(confirmMessage)) {
+                bulkActionForm.querySelectorAll('input[name="ids[]"]').forEach(input => input.remove());
+                checkedIds.forEach(id => {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'ids[]';
+                    hiddenInput.value = id;
+                    bulkActionForm.appendChild(hiddenInput);
+                });
+                
                 bulkActionForm.action = `${route}/bulk-${action}`;
                 bulkActionForm.submit();
             }

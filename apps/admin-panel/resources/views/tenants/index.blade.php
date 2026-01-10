@@ -18,9 +18,10 @@
                             Bulk Actions
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="bulkActionsDropdown">
-                            <li><a class="dropdown-item text-danger" href="#" data-bulk-action="delete" data-confirm-message="Are you sure you want to delete the selected API Clients?">Bulk Delete</a></li>
                             @if(request()->boolean('trashed'))
                             <li><a class="dropdown-item" href="#" data-bulk-action="restore" data-confirm-message="Are you sure you want to restore the selected API Clients?">Bulk Restore</a></li>
+                            @elseif(!request()->boolean('trashed'))
+                            <li><a class="dropdown-item text-danger" href="#" data-bulk-action="delete" data-confirm-message="Are you sure you want to delete the selected API Clients?">Bulk Delete</a></li>
                             @endif
                         </ul>
                     </div>
