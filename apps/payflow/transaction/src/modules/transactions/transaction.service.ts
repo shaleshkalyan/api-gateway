@@ -67,7 +67,7 @@ export class TransactionService {
 
       await axios.post(`${env.accountingUrl}/ledger/entry`, {
         transaction_id: transactionId,
-        user_id : body.user_id,
+        user_id: body.user_id,
         amount: body.amount,
         currency: body.currency,
         type: body.type,
@@ -106,5 +106,30 @@ export class TransactionService {
 
       throw new AppError("Transaction failed", 500);
     }
+  }
+  async getTransactionStatus(transactionId: string) {
+    logger.info("Transaction status requested", {
+      transaction_id: transactionId,
+    });
+
+    const tx = await db.query(
+      `SELECT id, status, amount, currency, type, created_at
+       FROM payflow_transactions
+       WHERE id = $1 LIMIT 1`,
+      [transactionId]
+    );
+
+    if (!tx.rows.length) {
+      throw new AppError("Transaction not found", 404);
+    }
+
+    return {
+      transaction_id: tx.rows[0].id,
+      status: tx.rows[0].status,
+      amount: tx.rows[0].amount,
+      currency: tx.rows[0].currency,
+      type: tx.rows[0].type,
+      created_at: tx.rows[0].created_at,
+    };
   }
 }

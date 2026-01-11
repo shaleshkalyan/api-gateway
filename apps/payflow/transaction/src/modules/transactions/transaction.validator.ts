@@ -5,3 +5,9 @@ export function validateTransaction(body: any) {
     throw new AppError("Invalid transaction payload");
   }
 }
+
+export function validateTransactionStatus(body: any) {
+    if (!body.transaction_id) {
+      throw new AppError("transaction_id is required", 400);
+    }
+}

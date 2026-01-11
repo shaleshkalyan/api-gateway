@@ -11,6 +11,7 @@ CREATE TABLE payflow_wallets (
 CREATE TABLE payflow_ledger_entries (
   id UUID PRIMARY KEY,
   wallet_id UUID NOT NULL,
+  transaction_id UUID NOT NULL,
   type VARCHAR(10) CHECK (type IN ('credit','debit')),
   amount NUMERIC(14,2) NOT NULL,
   balance_after NUMERIC(14,2) NOT NULL,

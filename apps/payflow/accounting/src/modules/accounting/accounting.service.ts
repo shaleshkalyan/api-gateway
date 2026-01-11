@@ -45,7 +45,7 @@ export class AccountingService {
     transaction_id: string;
     user_id: string;
     currency: string;
-    type: "CREDIT" | "DEBIT";
+    type: "credit" | "debit";
     amount: number;
   }) {
     const { transaction_id, user_id, currency, type, amount } = body;
@@ -97,7 +97,7 @@ export class AccountingService {
 
       const currentBalance = Number(lockedWallet.balance);
       const newBalance =
-        type === "CREDIT"
+        type === "credit"
           ? currentBalance + amount
           : currentBalance - amount;
 

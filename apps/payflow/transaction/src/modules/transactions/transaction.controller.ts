@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { TransactionService } from "./transaction.service";
-import { validateTransaction } from "./transaction.validator";
+import { validateTransaction, validateTransactionStatus } from "./transaction.validator";
 import { logger } from "../../utils/logger";
 
 const service = new TransactionService();
@@ -23,5 +23,21 @@ export async function create(req: Request, res: Response, next: NextFunction) {
     res.json({ success: true, data: result });
   } catch (e) {
     next(e);
+  }
+}
+
+export async function transactionStatus(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { transaction_id } = req.body;
+    validateTransactionStatus(req.body);
+
+    const result = await service.getTransactionStatus(transaction_id);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
   }
 }
