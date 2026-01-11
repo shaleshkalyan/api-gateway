@@ -12,7 +12,7 @@
     "migration:run": "typeorm-ts-node-commonjs migration:run"
   },
   "keywords": [],
-  "author": "",
+  "author": "Shalesh Kalyan",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
