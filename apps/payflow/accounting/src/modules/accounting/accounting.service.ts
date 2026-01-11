@@ -1,13 +1,13 @@
 import { db } from "../../config/database";
 import { AccountingRepository } from "./accounting.repository";
 import { AppError } from "../../utils/error";
-import { v4 as uuid } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 
 export class AccountingService {
   private repo = new AccountingRepository();
 
   async createWallet(userId: string, currency: string) {
-    const walletId = uuid();
+    const walletId = uuidv4();
     await this.repo.createWallet(walletId, userId, currency);
     return { wallet_id: walletId };
   }
@@ -38,7 +38,7 @@ export class AccountingService {
       await this.repo.updateBalance(client, walletId, newBalance);
 
       await this.repo.insertLedger(client, {
-        id: uuid(),
+        id: uuidv4(),
         wallet_id: walletId,
         type,
         amount,
