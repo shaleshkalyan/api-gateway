@@ -1,12 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../utils/error";
+import { logger } from "../utils/logger";
 
-export function errorMiddleware(
+export const errorMiddleware = (
   err: Error,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
-) {
+) => {
+  logger.error("Unhandled API error", {
+    path: req.path,
+    error: err.message,
+  });
+
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
@@ -14,9 +20,8 @@ export function errorMiddleware(
     });
   }
 
-  console.error(err);
-  return res.status(500).json({
+  res.status(500).json({
     success: false,
     message: "Internal server error",
   });
-}
+};
